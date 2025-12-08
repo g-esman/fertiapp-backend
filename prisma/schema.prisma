@@ -1,0 +1,64 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               Int                  @id @default(autoincrement())
+  email            String               @unique
+  passwordHash     String
+  fullName         String
+  preferredLocale  String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  educationStates  UserEducationState[]
+}
+
+model EducationalTopic {
+  id               Int                  @id @default(autoincrement())
+  title            String
+  slug             String               @unique
+  shortDescription String?
+  imageUrl         String?
+  order            Int                  @default(0)
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  sections         EducationalSection[]
+}
+
+model EducationalSection {
+  id               Int                  @id @default(autoincrement())
+  topicId          Int
+  title            String
+  contentMarkdown  String
+  order            Int                  @default(0)
+  estimatedMinutes Int?
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  topic            EducationalTopic     @relation(fields: [topicId], references: [id])
+  educationStates  UserEducationState[]
+}
+
+model UserEducationState {
+  id           Int                @id @default(autoincrement())
+  userId       Int
+  sectionId    Int
+  isFavorite   Boolean            @default(false)
+  isCompleted  Boolean            @default(false)
+  completedAt  DateTime?
+  lastViewedAt DateTime?
+
+  user         User               @relation(fields: [userId], references: [id])
+  section      EducationalSection @relation(fields: [sectionId], references: [id])
+
+  @@unique([userId, sectionId])
+}
